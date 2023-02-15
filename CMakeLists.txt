@@ -33,7 +33,7 @@ FILE(GLOB_RECURSE
 SOURCE_GROUP("Source Files" FILES ${folder_source})
 SOURCE_GROUP("Header Files" FILES ${folder_header})
 
-add_executable(${PROJECT_NAME} ${folder_source} ${folder_header} src/Scene/DirectionalLight.cpp src/Scene/DirectionalLight.h)
+add_executable(${PROJECT_NAME} ${folder_source} ${folder_header})
 
 set(EXT_LIBS Qt5::Core Qt5::Widgets assimp)
 target_link_libraries(${PROJECT_NAME} ${EXT_LIBS} ${OPENGL_LIBRARIES})
