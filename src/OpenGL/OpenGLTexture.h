@@ -4,6 +4,7 @@
 #include "../Scene/Texture.h"
 #include <QObject>
 #include <QOpenGLTexture>
+#include <QOpenGLFunctions_3_3_Core>
 
 class OpenGLTexture: public QObject {
     Q_OBJECT
@@ -18,7 +19,9 @@ public:
 
 private:
     Texture* _host;
-    QOpenGLTexture *_openGLTexture;
+    unsigned int *_id;
+
+    QOpenGLFunctions_3_3_Core *glFuncs;
 
 private slots:
     void imageChanged(const QImage& image);

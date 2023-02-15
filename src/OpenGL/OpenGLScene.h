@@ -21,7 +21,7 @@ public:
     void renderEnvironment();
 
     void commitCameraInfo();
-    void commitLightInfo();
+    void commitLightInfo(AbstractLight *light);
 
 private slots:
     void modelAdded(Model* model);
@@ -32,6 +32,7 @@ private slots:
 private:
     Scene* _host;
     QVector<OpenGLMesh*> _normalMeshes;
+    QVector<OpenGLMesh*> _lightMeshes;
     std::unique_ptr<OpenGLEnvironment> _environment;
 
     static OpenGLUniformBufferObject *_cameraInfo, *_lightInfo;

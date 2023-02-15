@@ -3,7 +3,7 @@
 #define TP_IG_M2_S2_POINTLIGHT_H
 
 #include <QVector3D>
-#include "Mesh.h"
+#include "Model.h"
 #include "AbstractLight.h"
 
 class PointLight : public AbstractLight {
@@ -22,7 +22,6 @@ public:
 private:
     QVector3D _position;
     float _attenuationQuadratic, _attenuationLinear, _attenuationConstant;
-    Mesh* _marker;
 };
 
 

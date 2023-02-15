@@ -9,8 +9,9 @@ set(CMAKE_AUTOUIC ON)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/bin)
 
+find_package(OpenGL REQUIRED)
 set(CMAKE_PREFIX_PATH /home/clement/Qt/5.15.2/gcc_64/lib/cmake/Qt5)
-find_package(Qt5 COMPONENTS Core Widgets OpenGL REQUIRED)
+find_package(Qt5 COMPONENTS Core Widgets REQUIRED)
 
 set(BUILD_SHARED_LIBS OFF)
 add_subdirectory(./lib/assimp)
@@ -32,7 +33,7 @@ FILE(GLOB_RECURSE
 SOURCE_GROUP("Source Files" FILES ${folder_source})
 SOURCE_GROUP("Header Files" FILES ${folder_header})
 
-add_executable(${PROJECT_NAME} ${folder_source} ${folder_header} src/Scene/AbstractLight.cpp src/Scene/AbstractLight.h src/Scene/PointLight.cpp src/Scene/PointLight.h src/Scene/Environment.cpp src/Scene/Environment.h src/OpenGL/OpenGLEnvironment.cpp src/OpenGL/OpenGLEnvironment.h src/Scene/EnvironmentLoader.cpp src/Scene/EnvironmentLoader.h)
+add_executable(${PROJECT_NAME} ${folder_source} ${folder_header} src/Scene/DirectionalLight.cpp src/Scene/DirectionalLight.h)
 
-set(EXT_LIBS Qt5::Core Qt5::Widgets Qt5::OpenGL assimp)
-target_link_libraries(${PROJECT_NAME} ${EXT_LIBS})
+set(EXT_LIBS Qt5::Core Qt5::Widgets assimp)
+target_link_libraries(${PROJECT_NAME} ${EXT_LIBS} ${OPENGL_LIBRARIES})

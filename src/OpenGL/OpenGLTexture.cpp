@@ -5,35 +5,43 @@
 
 OpenGLTexture::OpenGLTexture(Texture *texture) {
     _host = texture;
-    _openGLTexture = 0;
+    _id = nullptr;
+    glFuncs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
 }
 
 OpenGLTexture::~OpenGLTexture() {
-    _openGLTexture->destroy();
-    delete _openGLTexture;
+    glFuncs->glDeleteTextures(1, _id);
+    delete _id;
 }
 
 void OpenGLTexture::create() {
-    _openGLTexture = new QOpenGLTexture(_host->image().mirrored());
-    _openGLTexture->setMinificationFilter(QOpenGLTexture::Nearest);
-    _openGLTexture->setMagnificationFilter(QOpenGLTexture::Linear);
-    _openGLTexture->setWrapMode(QOpenGLTexture::Repeat);
+    QImage I = _host->image().convertToFormat(QImage::Format_RGBA8888).mirrored();
+    _id = new unsigned int();
+    glFuncs->glGenTextures(1, _id);
+    glFuncs->glBindTexture(GL_TEXTURE_2D, *_id);
+    glFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glFuncs->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFuncs->glTexImage2D(GL_TEXTURE_2D, 0, GL_SRGB_ALPHA, I.width(), I.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, I.bits());
+    glFuncs->glGenerateMipmap(GL_TEXTURE_2D);
+// load and generate the texture
+    release();
 }
 
 bool OpenGLTexture::bind() {
-    if (!_openGLTexture) create();
-    QOpenGLFunctions * glFuncs = QOpenGLContext::currentContext()->functions();
+    if (!_id) create();
     switch(_host->textureType()) {
         case Texture::Albedo:
         {
             glFuncs->glActiveTexture(GL_TEXTURE0 + 0);
-            glFuncs->glBindTexture(GL_TEXTURE_2D, _openGLTexture->textureId());
+            glFuncs->glBindTexture(GL_TEXTURE_2D, *_id);
             break;
         }
         case Texture::MetalRoughness:
         {
             glFuncs->glActiveTexture(GL_TEXTURE0 + 1);
-            glFuncs->glBindTexture(GL_TEXTURE_2D, _openGLTexture->textureId());
+            glFuncs->glBindTexture(GL_TEXTURE_2D, *_id);
             break;
         }
     }
@@ -41,15 +49,12 @@ bool OpenGLTexture::bind() {
 }
 
 void OpenGLTexture::release() {
-    _openGLTexture->release();
+    glBindTexture( GL_TEXTURE_2D, 0);
 }
 
 void OpenGLTexture::imageChanged(const QImage &image) {
-    if (_openGLTexture) {
-        delete _openGLTexture;
-        _openGLTexture = new QOpenGLTexture(image);
-        _openGLTexture->setMinificationFilter(QOpenGLTexture::Nearest);
-        _openGLTexture->setMagnificationFilter(QOpenGLTexture::Linear);
-        _openGLTexture->setWrapMode(QOpenGLTexture::Repeat);
+    if (_id) {
+        glFuncs->glDeleteTextures(1, _id);
     }
+    _host->setImage(image);
 }

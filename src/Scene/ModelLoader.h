@@ -14,6 +14,7 @@ public:
     ModelLoader();
 
     Model* loadModelFromFile(QString filePath);
+    Mesh* loadMeshFromFile(QString filePath);
     Model* loadModel(const aiNode *node);
     Mesh *loadMesh(const aiMesh *aiMesh);
 

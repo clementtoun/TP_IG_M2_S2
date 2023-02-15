@@ -6,6 +6,7 @@ PointLight::PointLight(QObject *parent) : AbstractLight() {
     _attenuationQuadratic = 0.0007f;
     _attenuationLinear = 0.014f;
     _attenuationConstant = 1.0f;
+    _type = POINT_LIGHT;
 
     setObjectName("Untitled Point Light");
     setParent(parent);
@@ -16,6 +17,7 @@ PointLight::PointLight(QVector3D color, QVector3D position, QObject *parent) : A
     _attenuationQuadratic = 0.000007f;
     _attenuationLinear = 0.0014f;
     _attenuationConstant = 1.0f;
+    _type = POINT_LIGHT;
 
     setObjectName("Untitled Point Light");
     setParent(parent);

@@ -6,6 +6,7 @@ in vec3 FragPos;
 in vec3 Normal;
 in vec2 TexCoords;
 in vec3 out_viewPos;
+in vec4 FragPosLightSpace;
 
 // struct flashLight {
 //     vec3 pos;
@@ -20,6 +21,10 @@ in vec3 out_viewPos;
 
 uniform sampler2D colorTexture;
 uniform sampler2D metallicRoughnessTexture;
+uniform sampler2D shadowMap;
+uniform samplerCube shadowCubeMap;
+
+uniform float far_plane;
 
 struct Material { // uniform size: 48
 //shared metal/dielectric
@@ -40,16 +45,21 @@ struct PointLight {
     vec4 attenuation;
 };
 
+struct DirectionalLight {
+    vec4 color;
+    vec4 dir;
+};
+
 layout (std140) uniform LightInfo { // uniform size: 1424
     //                                    // base align  // aligned offset
     //int ambientLightNum;                  // 4           // 0
-    //int directionalLightNum;              // 4           // 4
     //int spotLightNum;                     // 4           // 12
     //AmbientLight ambientLight[8];         // 16          // 16
-    //DirectionalLight directionalLight[8]; // 32          // 144
-    PointLight pointLight[8];             // 48          // 400
-    //SpotLight spotLight[8];               // 80          // 784
+    DirectionalLight directionalLight; // 32          // 144
+    PointLight pointLight;             // 48          // 400
+    int directionalLightNum;
     int pointLightNum;
+    //SpotLight spotLight[8];               // 80          // 784
 };
 
 const float M_PI = 3.141592653589793;
@@ -82,6 +92,71 @@ vec3 gltf2_color(float NdotH, float NdotL, float NdotV, float HdotL, float HdotV
     return f_diffuse + f_specular;
 }
 
+float ShadowCalculation(vec4 fragPosLightSpace, float NdotL)
+{
+        // perform perspective divide
+        vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+        // transform to [0,1] range
+        projCoords = projCoords * 0.5 + 0.5;
+        // get closest depth value from light's perspective (using [0,1] range fragPosLight as coords)
+        float closestDepth = texture(shadowMap, projCoords.xy).r;
+        // get depth of current fragment from light's perspective
+        float currentDepth = projCoords.z;
+        float bias = max(0.05 * (1.0 - NdotL), 0.005);
+        // check whether current frag pos is in shadow
+        // float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
+        // PCF
+        float shadow = 0.0;
+        vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+        for(int x = -1; x <= 1; ++x)
+        {
+            for(int y = -1; y <= 1; ++y)
+            {
+                float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+                shadow += currentDepth - bias > pcfDepth  ? 1.0 : 0.0;
+            }
+        }
+        shadow /= 9.0;
+
+        // keep the shadow at 0.0 when outside the far_plane region of the light's frustum.
+        if(projCoords.z > 1.0)
+            shadow = 0.0;
+
+        return shadow;
+}
+
+// array of offset direction for sampling
+vec3 gridSamplingDisk[20] = vec3[]
+(
+   vec3(1, 1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1, 1,  1),
+   vec3(1, 1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1, 1, -1),
+   vec3(1, 1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1, 1,  0),
+   vec3(1, 0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1, 0, -1),
+   vec3(0, 1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0, 1, -1)
+);
+
+float PointShadowCalculation(vec3 fragToLight)
+{
+    // now get current linear depth as the length between the fragment and light position
+    float currentDepth = length(fragToLight);
+    // now test for shadows
+    float shadow = 0.0;
+    float bias = 0.15;
+    int samples = 20;
+    float viewDistance = length(out_viewPos - FragPos);
+    float diskRadius = (1.0 + (viewDistance / far_plane)) / 25.0;
+    for(int i = 0; i < samples; ++i)
+    {
+        float closestDepth = texture(shadowCubeMap, fragToLight + gridSamplingDisk[i] * diskRadius).r;
+        closestDepth *= far_plane;   // undo mapping [0;1]
+        if(currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+    shadow /= float(samples);
+
+    return shadow;
+}
+
 void main()
 {
     vec3 color_texture = material.useColorMap == 1 ? vec3(texture(colorTexture, TexCoords)) : vec3(material.color);
@@ -93,6 +168,7 @@ void main()
         metallic = metalRoughnessSample.b;
     }
 
+    vec3 frag_color = vec3(0.0, 0.0, 0.0);
     vec3 V, L, N, H;
     V = normalize(out_viewPos - FragPos);
     N = normalize(gl_FrontFacing ? Normal : -Normal);
@@ -102,23 +178,38 @@ void main()
     float NdotL;
     float HdotL;
     float HdotV;
-    float distance;
-    float attenuation;
-    vec3 frag_color = vec3(0.0, 0.0, 0.0);
 
-    for(int i = 0; i < pointLightNum; i++){
-        PointLight light = pointLight[i];
-        L = normalize(light.pos.xyz - FragPos);
+    if (directionalLightNum == 1) {
+        L = normalize(-directionalLight.dir.xyz);
         H = normalize(L + V);
-        distance = length(light.pos.xyz - FragPos);
-        attenuation = 1.0 / (light.attenuation[3] + light.attenuation[2] * distance + light.attenuation[1] * distance);
 
         NdotH = dot(N,H);
         NdotL = dot(N,L);
         HdotL = dot(H,L);
         HdotV = dot(H,V);
 
-        frag_color += max(NdotL, 0.0) * light.color.rgb * gltf2_color(NdotH, NdotL, NdotV, HdotL, HdotV, color_texture, roughness, metallic) * attenuation;
+        float shadow = ShadowCalculation(FragPosLightSpace, NdotL);
+
+        frag_color += max(NdotL, 0.0) * (1.0 - shadow) * directionalLight.color.rgb * gltf2_color(NdotH, NdotL, NdotV, HdotL, HdotV, color_texture, roughness, metallic);
+    }
+
+    float distance;
+    float attenuation;
+
+    if (pointLightNum == 1) {
+        L = normalize(pointLight.pos.xyz - FragPos);
+        H = normalize(L + V);
+        distance = length(pointLight.pos.xyz - FragPos);
+        attenuation = 1.0 / (pointLight.attenuation[3] + pointLight.attenuation[2] * distance + pointLight.attenuation[1] * distance);
+
+        NdotH = dot(N,H);
+        NdotL = dot(N,L);
+        HdotL = dot(H,L);
+        HdotV = dot(H,V);
+
+        float shadow = PointShadowCalculation(FragPos - pointLight.pos.xyz);
+
+        frag_color += max(NdotL, 0.0) * (1.0 - shadow) * pointLight.color.rgb * gltf2_color(NdotH, NdotL, NdotV, HdotL, HdotV, color_texture, roughness, metallic) * attenuation;
     }
 //     L = normalize(fLight.pos - FragPos);
 //     H = normalize(L + V);
@@ -133,6 +224,5 @@ void main()
 //     HdotV = dot(H,V);
 //
 //     frag_color += max(NdotL, 0.0f) * fLight.color * gltf2_color(NdotH, NdotL, NdotV, HdotL, HdotV, color_texture, roughness, metallic) * attenuation * intensity;
-
     FragColor = vec4(frag_color, 1.0);
 }

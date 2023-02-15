@@ -5,6 +5,7 @@
 #include "Camera.h"
 #include "PointLight.h"
 #include "AbstractLight.h"
+#include "DirectionalLight.h"
 #include "Environment.h"
 
 class Scene : public QObject {
@@ -17,6 +18,7 @@ public:
 
     bool addModel(Model *model);
     bool addPointLight(PointLight *pointLight);
+    bool addDirectionalLight(DirectionalLight *dirLight);
 
     bool changeEnvironment(Environment* environment);
 
@@ -24,6 +26,8 @@ public:
     bool changeCamera();
 
     const QVector<PointLight *> &pointLights() const;
+
+    const QVector<DirectionalLight *> &directionalLights() const;
 
 signals:
     void modelAdded(Model* model);
@@ -34,6 +38,7 @@ signals:
 private:
     QVector<Model*> _models;
     QVector<PointLight*> _pointLights;
+    QVector<DirectionalLight*> _directionalLights;
 
     std::unique_ptr<Environment> _environment;
 

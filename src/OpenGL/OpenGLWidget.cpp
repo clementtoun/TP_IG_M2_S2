@@ -16,9 +16,9 @@ OpenGLWidget::OpenGLWidget(OpenGLScene *openGLScene, OpenGLRenderer *renderer) {
     format.setMajorVersion(4); format.setMinorVersion(5);
     format.setProfile(QSurfaceFormat::CoreProfile);
     format.setSamples(4);
-    format.setColorSpace(QSurfaceFormat::sRGBColorSpace);
+    //format.setColorSpace(QSurfaceFormat::sRGBColorSpace);
     setFormat(format);
-    setTextureFormat(GL_SRGB);
+    //setTextureFormat(GL_SRGB);
 }
 
 void OpenGLWidget::initializeGL() {
@@ -28,28 +28,31 @@ void OpenGLWidget::initializeGL() {
     glEnable(GL_FRAMEBUFFER_SRGB);
 
     if (_renderer) {
+        _renderer->setContext(context());
         _renderer->reloadShaders();
+        _renderer->initialiseShadowFrameBuffer();
     }
 }
 
 void OpenGLWidget::resizeGL(int w, int h) {
     glViewport(0, 0, width(), height());
+    _renderer->setWidth(width());
+    _renderer->setHeight(height());
 }
 
 void OpenGLWidget::paintGL() {
-    glClearColor(0.1176, 0.4902, 0.2549, 1.0f);
+    glClearColor(0.082, 0.297, 0.473, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     if (_renderer && _scene && _scene->host()->camera()) {
         _scene->host()->camera()->setAspect(float(width()) / float(height()));
         _scene->commitCameraInfo();
-        _scene->commitLightInfo();
         _renderer->render(_scene);
     }
 
     qint64 end = QDateTime::currentMSecsSinceEpoch();
 
-    std::cout << (end - _last_time) << " ms" << std::endl;
+    //std::cout << (end - _last_time) << " ms" << std::endl;
 
     _last_time = QDateTime::currentMSecsSinceEpoch();
 }

@@ -7,6 +7,7 @@ ModelLoader::ModelLoader() {}
 
 Model *ModelLoader::loadModelFromFile(QString filePath) {
     Assimp::Importer import;
+    import.SetPropertyFloat("PP_GSN_MAX_SMOOTHING_ANGLE", 90);
     const aiScene *scene = import.ReadFile(filePath.toStdString(), aiProcess_Triangulate);
 
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
@@ -99,4 +100,24 @@ Material *ModelLoader::loadMaterial(const aiMaterial *aiMaterialPtr) {
     }
 
     return material;
+}
+
+Mesh *ModelLoader::loadMeshFromFile(QString filePath) {
+    Assimp::Importer import;
+    const aiScene *scene = import.ReadFile(filePath.toStdString(), aiProcess_Triangulate);
+
+    if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+    {
+        std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+        return nullptr;
+    }
+
+    _dir = QFileInfo(filePath).absoluteDir();
+    _aiScene = scene;
+
+    Mesh* mesh = loadMesh(scene->mMeshes[0]);
+    mesh->setObjectName(QFileInfo(filePath).baseName());
+    mesh->setMaterial(new Material());
+
+    return mesh;
 }

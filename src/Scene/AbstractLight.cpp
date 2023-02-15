@@ -21,3 +21,15 @@ const QVector3D &AbstractLight::color() const {
 float AbstractLight::intensity() const {
     return _intensity;
 }
+
+LightType AbstractLight::getType() const {
+    return _type;
+}
+
+Mesh *AbstractLight::getMesh() const {
+    return _marker;
+}
+
+void AbstractLight::setMesh(Mesh *mesh) {
+    _marker = mesh;
+}

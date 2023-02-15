@@ -15,16 +15,21 @@ struct ShaderPointLight { // struct size: 48
     QVector4D attenuation;       // 16          // 32
 };
 
+struct ShaderDirectionalLight {
+    QVector4D color;
+    QVector4D dir;
+};
+
 struct ShaderlightInfo { // struct size: 1424
     //                                          // base align  // aligned offset
-    //int ambientLightNum;                        // 4           // 0
-    //int directionalLightNum;                    // 4           // 4     // 4           // 8
+    //int ambientLightNum;                        // 4           // 0     // 4           // 4     // 4           // 8
     //int spotLightNum;                           // 4           // 12
     //ShaderAmbientLight ambientLight[8];         // 16          // 16
-    //ShaderDirectionalLight directionalLight[8]; // 32          // 144
-    ShaderPointLight pointLight[8];             // 48          // 400
-    //ShaderSpotLight spotLight[8];               // 80          // 784
+    ShaderDirectionalLight directionalLight; // 32          // 144
+    ShaderPointLight pointLight;             // 48          // 400
+    int directionalLightNum;
     int pointLightNum;
+    //ShaderSpotLight spotLight[8];               // 80          // 784
 };
 
 static ShaderlightInfo shaderlightInfo;
@@ -44,13 +49,15 @@ Scene *OpenGLScene::host() const {
 }
 
 void OpenGLScene::renderModels() {
-    for (auto mesh : _normalMeshes) {
+    for (auto mesh: _normalMeshes) {
         mesh->render();
     }
 }
 
 void OpenGLScene::renderLights() {
-
+    for (auto mesh : _lightMeshes) {
+        mesh->render();
+    }
 }
 
 void OpenGLScene::renderEnvironment() {
@@ -71,7 +78,10 @@ void OpenGLScene::meshAdded(Mesh *mesh) {
 }
 
 void OpenGLScene::lightAdded(AbstractLight *light) {
-
+    if(light->getType() == POINT_LIGHT)
+        _lightMeshes.push_back(new OpenGLMesh(light->getMesh(), this));
+    if(light->getType() == DIRECTIONAL_LIGHT)
+        std::cout << light->getType() << std::endl;
 }
 
 void OpenGLScene::environmentChanged(Environment *environment) {
@@ -97,19 +107,28 @@ void OpenGLScene::commitCameraInfo() {
     _cameraInfo->release();
 }
 
-void OpenGLScene::commitLightInfo() {
+void OpenGLScene::commitLightInfo(AbstractLight *light) {
     int pointLightNum = 0;
-    for (int i = 0; i < _host->pointLights().size(); i++) {
-        shaderlightInfo.pointLight[pointLightNum].color = _host->pointLights()[i]->color() * _host->pointLights()[i]->intensity();
-        shaderlightInfo.pointLight[pointLightNum].pos = _host->pointLights()[i]->position();
-        shaderlightInfo.pointLight[pointLightNum].attenuation[0] = 1.f;
-        shaderlightInfo.pointLight[pointLightNum].attenuation[1] = _host->pointLights()[i]->attenuationQuadratic();
-        shaderlightInfo.pointLight[pointLightNum].attenuation[2] = _host->pointLights()[i]->attenuationLinear();
-        shaderlightInfo.pointLight[pointLightNum].attenuation[3] = _host->pointLights()[i]->attenuationConstant();
+    if(light->getType() == POINT_LIGHT) {
+        auto *l = (PointLight *) light;
+        shaderlightInfo.pointLight.color = l->color() * l->intensity();
+        shaderlightInfo.pointLight.pos = l->position();
+        shaderlightInfo.pointLight.attenuation[0] = 1.f;
+        shaderlightInfo.pointLight.attenuation[1] = l->attenuationQuadratic();
+        shaderlightInfo.pointLight.attenuation[2] = l->attenuationLinear();
+        shaderlightInfo.pointLight.attenuation[3] = l->attenuationConstant();
         pointLightNum++;
+    }
+    int directionalLightNum = 0;
+    if(light->getType() == DIRECTIONAL_LIGHT) {
+        auto *l = (DirectionalLight *) light;
+        shaderlightInfo.directionalLight.color = l->color() * l->intensity();
+        shaderlightInfo.directionalLight.dir = l->direction();
+        directionalLightNum++;
     }
 
     shaderlightInfo.pointLightNum = pointLightNum;
+    shaderlightInfo.directionalLightNum = directionalLightNum;
 
     if (_lightInfo == 0) {
         _lightInfo = new OpenGLUniformBufferObject;

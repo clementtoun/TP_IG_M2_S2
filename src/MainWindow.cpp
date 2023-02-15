@@ -18,7 +18,10 @@ MainWindow::MainWindow(QWidget * parent) : QMainWindow(parent), _host(0) {
     menuFile->addAction("Import Model", this, SLOT(fileImportModel()));
     menuFile->addAction("Import Environment", this, SLOT(fileImportEnvironment()));
 
-    _host->addPointLight(new PointLight(QVector3D(1.0,1.0,1.0),QVector3D(1., 2., 0.)));
+    _host->addPointLight(new PointLight(QVector3D(1.0,1.0,1.0),QVector3D(-7., 3., 0.)));
+    _host->addPointLight(new PointLight(QVector3D(1.0,1.0,1.0),QVector3D(0., 3., 0.)));
+    _host->addPointLight(new PointLight(QVector3D(1.0,1.0,1.0),QVector3D(7., 3., 0.)));
+    _host->addDirectionalLight(new DirectionalLight({1,1,1},{-0.5,-1,-0.5}));
 }
 
 
@@ -32,7 +35,7 @@ void MainWindow::fileImportModel() {
 }
 
 void MainWindow::fileImportEnvironment() {
-    QString filePath = QFileDialog::getOpenFileName(this, "Load Environment", "../Environments/", "Environment (*.jpg)");
+    QString filePath = QFileDialog::getOpenFileName(this, "Load Environment", "../Environments/", "Environment (*.jpg *.png)");
     if (filePath == 0) return;
 
     EnvironmentLoader envLoader;

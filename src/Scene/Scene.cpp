@@ -1,6 +1,6 @@
-
 #include <iostream>
 #include "Scene.h"
+#include "ModelLoader.h"
 
 Scene::Scene() {
     setObjectName("Untilted Scene");
@@ -40,9 +40,26 @@ bool Scene::addPointLight(PointLight *pointLight) {
     if(_pointLights.contains(pointLight))
         return false;
 
+    ModelLoader mloader;
+    Mesh *m = mloader.loadMeshFromFile("../Models/Sphere/sphere.obj");
+    m->translate(pointLight->position());
+    m->scale(QVector3D(0.1,0.1,0.1));
+    pointLight->setMesh(m);
+    m->material()->setColor(pointLight->color());
     _pointLights.push_back(pointLight);
     pointLight->setParent(this);
     lightAdded(pointLight);
+
+    return true;
+}
+
+bool Scene::addDirectionalLight(DirectionalLight *dirLight) {
+    if(_directionalLights.contains(dirLight))
+        return false;
+
+    _directionalLights.push_back(dirLight);
+    dirLight->setParent(this);
+    lightAdded(dirLight);
 
     return true;
 }
@@ -69,4 +86,8 @@ Camera *Scene::camera() const {
 
 const QVector<PointLight *> &Scene::pointLights() const {
     return _pointLights;
+}
+
+const QVector<DirectionalLight *> &Scene::directionalLights() const {
+    return _directionalLights;
 }
