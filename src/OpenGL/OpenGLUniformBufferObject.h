@@ -1,7 +1,7 @@
 #ifndef TP_IG_M2_S2_OPENGLUNIFORMBUFFEROBJECT_H
 #define TP_IG_M2_S2_OPENGLUNIFORMBUFFEROBJECT_H
 
-#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLFunctions_4_5_Core>
 #include <QOpenGLShaderProgram>
 
 #define CAMERA_INFO_BINDING_POINT 0
@@ -29,7 +29,7 @@ public:
 
 private:
     GLuint _id;
-    static QOpenGLFunctions_3_3_Core* glFuncs;
+    static QOpenGLFunctions_4_5_Core* glFuncs;
 };
 
 #endif //TP_IG_M2_S2_OPENGLUNIFORMBUFFEROBJECT_H

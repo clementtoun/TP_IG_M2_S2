@@ -5,7 +5,7 @@
 
 #include <QOpenGLVertexArrayObject>
 #include <QOpenGLBuffer>
-#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLFunctions_4_5_Core>
 #include "../Scene/Mesh.h"
 #include "OpenGLUniformBufferObject.h"
 #include "OpenGLMaterial.h"
@@ -30,8 +30,9 @@ private:
     Mesh* _host;
     QOpenGLVertexArrayObject * _vao;
     QOpenGLBuffer * _vbo, *_ebo;
-    QOpenGLFunctions_3_3_Core * glFuncs;
+    QOpenGLFunctions_4_5_Core * glFuncs;
     OpenGLMaterial *_openGLMaterial;
+    MeshType _type;
 
     static OpenGLUniformBufferObject *_modelInfo;
 };

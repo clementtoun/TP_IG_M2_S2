@@ -61,6 +61,18 @@ void Camera::processmousescroll(float yoffset) {
 
 }
 
+float Camera::getAspect() const {
+    return _aspect;
+}
+
+float Camera::getNear() const {
+    return _near;
+}
+
+float Camera::getFar() const {
+    return _far;
+}
+
 /*------------------------------------------------------------------------------------------------------------------------*/
 
 // A camera class that processes input and calculates the corresponding Eular Angles, Vectors and Matrices for use in OpenGL
@@ -145,6 +157,14 @@ void EulerCamera::updatecameravectors() {
     _up    = QVector3D::crossProduct(_right, _front).normalized();
 }
 
+float EulerCamera::getYaw() const {
+    return _yaw;
+}
+
+float EulerCamera::getPitch() const {
+    return _pitch;
+}
+
 /*------------------------------------------------------------------------------------------------------------------------*/
 /*                                            Trackball Camera                                                            */
 /*                                  Always rotate around point (0, 0, 0)                                                  */
@@ -208,4 +228,12 @@ void TrackballCamera::updatecameravectors() {
 
 void TrackballCamera::processmousescroll(float delta) {
     _position += _mol_speed*delta*_front;
+}
+
+float TrackballCamera::getYaw() const {
+    return _yaw;
+}
+
+float TrackballCamera::getPitch() const {
+    return _pitch;
 }

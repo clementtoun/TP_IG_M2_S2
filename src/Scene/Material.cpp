@@ -4,7 +4,7 @@
 Material::Material(QObject *parent) : QObject(parent) {
     _color = QVector3D(1.0f, 1.0f, 1.0f);
     _metallic = 0.5f;
-    _roughness = 0.5f;
+    _roughness = 0.3f;
     setObjectName("Untitled Material");
     setParent(parent);
 }
@@ -55,4 +55,28 @@ void Material::setColorTexture(const QSharedPointer<Texture> &colorTexture) {
 
 void Material::setMetallicRoughnessTexture(const QSharedPointer<Texture> &metallicRoughnessTexture) {
     _metallicRoughnessTexture = metallicRoughnessTexture;
+}
+
+void Material::setNormalTexture(const QSharedPointer<Texture> &normalTexture) {
+    _normalTexture = normalTexture;
+}
+
+void Material::setAoTexture(const QSharedPointer<Texture> &aoTexture) {
+    _aoTexture = aoTexture;
+}
+
+const QSharedPointer<Texture> &Material::getNormalTexture() const {
+    return _normalTexture;
+}
+
+const QSharedPointer<Texture> &Material::getAoTexture() const {
+    return _aoTexture;
+}
+
+void Material::setEmissiveTexture(const QSharedPointer<Texture> &emissiveTexture) {
+    _emissiveTexture = emissiveTexture;
+}
+
+const QSharedPointer<Texture> &Material::getEmissiveTexture() const {
+    return _emissiveTexture;
 }

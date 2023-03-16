@@ -1,9 +1,10 @@
 #include "Mesh.h"
 
-Mesh::Mesh(QObject *parent) : AbstractEntity(nullptr) {
+Mesh::Mesh(MeshType type, QObject *parent) : _type(type), AbstractEntity(nullptr) {
     setObjectName("Untitled model");
     setParent(parent);
     _material = nullptr;
+    _visible = true;
 }
 
 Mesh::~Mesh() {
@@ -38,5 +39,21 @@ bool Mesh::setMaterial(Material *material) {
 
 Material *Mesh::material() const {
     return _material;
+}
+
+const AABB &Mesh::getAabb() const {
+    return _aabb;
+}
+
+MeshType Mesh::getType() const {
+    return _type;
+}
+
+bool Mesh::isVisible() const {
+    return _visible;
+}
+
+void Mesh::setVisible(bool visible) {
+    _visible = visible;
 }
 

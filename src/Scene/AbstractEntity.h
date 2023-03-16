@@ -23,7 +23,37 @@ public:
     QMatrix4x4 localModelMatrix() const;
     QMatrix4x4 globalModelMatrix() const;
 
-    QMatrix4x4 _model;
+    bool isLocked() const;
+    void setLocked(bool locked);
+    float getMass() const;
+    void setMass(float mass);
+
+    const QVector3D &getVitesse() const;
+
+    void setVitesse(const QVector3D &vitesse);
+
+private:
+    QVector3D _position;
+public:
+    const QVector3D &getPosition() const;
+
+    void setPosition(const QVector3D &position);
+
+    const QVector3D &getRotation() const;
+
+    void setRotation(const QVector3D &rotation);
+
+    const QVector3D &getTranslation() const;
+
+    void setTranslation(const QVector3D &translation);
+
+private:
+    QVector3D _rotation;
+    QVector3D _translation;
+    QVector3D _scale;
+    QVector3D _vitesse;
+    float _mass;
+    bool _locked;
 };
 
 

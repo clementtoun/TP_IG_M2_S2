@@ -14,15 +14,24 @@ public:
     bool addChildMesh(Mesh* mesh);
     bool addChildModel(Model* model);
 
+    void getAABB(QVector<AABB>& aabb_list) const;
+
     const QVector<Mesh*> &childMeshes() const;
     const QVector<Model*> &childModels() const;
 
+    void setVisible(bool visible);
+
+    bool isVisible() const;
+
 signals:
     void childMeshAdded(Mesh* mesh);
+    void childModelAdded(Model* model);
 
 private:
     QVector<Mesh*> _childMesh;
     QVector<Model*> _childModels;
+
+    bool _visible;
 };
 
 

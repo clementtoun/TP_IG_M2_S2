@@ -6,6 +6,9 @@ struct ShaderMaterialInfo {
     float roughness;        // 4           // 20
     int useColorMap;    // 4           // 32
     int useMetallicRoughnessMap;   // 4           // 36
+    int useNormalTexture;
+    int useAoTexture;
+    int useEmissiveTexture;
 };
 
 static ShaderMaterialInfo shaderMaterialInfo;
@@ -17,6 +20,9 @@ OpenGLMaterial::OpenGLMaterial(Material *material, QObject *parent) {
 
     this->colorTextureChange(_host->getColorTexture());
     this->metallicRoughnessTextureChange(_host->getMetallicRoughnessTexture());
+    this->normalTextureChange(_host->getNormalTexture());
+    this->aoTextureChange(_host->getAoTexture());
+    this->emissiveTextureChange(_host->getEmissiveTexture());
 
     setParent(parent);
 }
@@ -28,11 +34,20 @@ Material *OpenGLMaterial::host() const {
 void OpenGLMaterial::bind() {
     shaderMaterialInfo.useColorMap = false;
     shaderMaterialInfo.useMetallicRoughnessMap = false;
+    shaderMaterialInfo.useNormalTexture = false;
+    shaderMaterialInfo.useAoTexture = false;
+    shaderMaterialInfo.useEmissiveTexture = false;
 
     if (_openGLColorTexture)
         shaderMaterialInfo.useColorMap = _openGLColorTexture->bind();
     if (_openGLMetallicRoughnessTexture)
         shaderMaterialInfo.useMetallicRoughnessMap = _openGLMetallicRoughnessTexture->bind();
+    if (_openGLNormalTexture)
+        shaderMaterialInfo.useNormalTexture = _openGLNormalTexture->bind();
+    if (_openGLAoTexture)
+        shaderMaterialInfo.useAoTexture = _openGLAoTexture->bind();
+    if (_openGLEmissiveTexture)
+        shaderMaterialInfo.useEmissiveTexture = _openGLEmissiveTexture->bind();
 
     shaderMaterialInfo.color = _host->getColor();
     shaderMaterialInfo.metallic = _host->getMetallic();
@@ -54,6 +69,9 @@ void OpenGLMaterial::bind() {
 void OpenGLMaterial::release() {
     if (_openGLColorTexture) _openGLColorTexture->release();
     if (_openGLMetallicRoughnessTexture) _openGLMetallicRoughnessTexture->release();
+    if (_openGLNormalTexture) _openGLNormalTexture->release();
+    if (_openGLAoTexture) _openGLAoTexture->release();
+    if (_openGLEmissiveTexture) _openGLEmissiveTexture->release();
 
     shaderMaterialInfo.color = QVector3D(0, 0, 0);
     shaderMaterialInfo.useColorMap = 0;
@@ -88,4 +106,25 @@ void OpenGLMaterial::metallicRoughnessTextureChange(QSharedPointer<Texture> text
 OpenGLMaterial::~OpenGLMaterial() {
     delete _openGLColorTexture;
     delete _openGLMetallicRoughnessTexture;
+}
+
+void OpenGLMaterial::normalTextureChange(QSharedPointer<Texture> texture) {
+    if (texture.isNull())
+        _openGLNormalTexture = 0;
+    else
+        _openGLNormalTexture = new OpenGLTexture(texture.data());
+}
+
+void OpenGLMaterial::aoTextureChange(QSharedPointer<Texture> texture) {
+    if (texture.isNull())
+        _openGLAoTexture = 0;
+    else
+        _openGLAoTexture = new OpenGLTexture(texture.data());
+}
+
+void OpenGLMaterial::emissiveTextureChange(QSharedPointer<Texture> texture) {
+    if (texture.isNull())
+        _openGLEmissiveTexture = 0;
+    else
+        _openGLEmissiveTexture = new OpenGLTexture(texture.data());
 }

@@ -22,10 +22,13 @@ public:
 private slots:
     void colorTextureChange(QSharedPointer<Texture> texture);
     void metallicRoughnessTextureChange(QSharedPointer<Texture> texture);
+    void normalTextureChange(QSharedPointer<Texture> texture);
+    void aoTextureChange(QSharedPointer<Texture> texture);
+    void emissiveTextureChange(QSharedPointer<Texture> texture);
 
 private:
     Material* _host;
-    OpenGLTexture* _openGLColorTexture, *_openGLMetallicRoughnessTexture;
+    OpenGLTexture* _openGLColorTexture, *_openGLMetallicRoughnessTexture, *_openGLNormalTexture, *_openGLAoTexture, *_openGLEmissiveTexture;
     static OpenGLUniformBufferObject *_materialInfo;
 
 };

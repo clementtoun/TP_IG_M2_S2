@@ -8,7 +8,7 @@ ModelLoader::ModelLoader() {}
 Model *ModelLoader::loadModelFromFile(QString filePath) {
     Assimp::Importer import;
     import.SetPropertyFloat("PP_GSN_MAX_SMOOTHING_ANGLE", 90);
-    const aiScene *scene = import.ReadFile(filePath.toStdString(), aiProcess_Triangulate);
+    const aiScene *scene = import.ReadFile(filePath.toStdString(), aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs);
 
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {
@@ -30,10 +30,15 @@ Model *ModelLoader::loadModel(const aiNode *node) {
     model->setObjectName(node->mName.length ? node->mName.C_Str() : "Untitled");
 
     auto mat = node->mTransformation;
+
     model->setLocalModel({mat[0][0], mat[0][1], mat[0][2], mat[0][3],
                           mat[1][0], mat[1][1], mat[1][2], mat[1][3],
                           mat[2][0], mat[2][1], mat[2][2], mat[2][3],
                           mat[3][0], mat[3][1], mat[3][2], mat[3][3]});
+    /*model->setLocalModel({mat[0][0], mat[1][0], mat[2][0], mat[3][0],
+                          mat[0][1], mat[1][1], mat[2][1], mat[3][1],
+                          mat[0][2], mat[1][2], mat[2][2], mat[3][2],
+                          mat[0][3], mat[1][3], mat[2][3], mat[3][3]});*/
 
 //    for(int i = 0; i < 4; i++) {
 //        std::cout
@@ -53,20 +58,43 @@ Model *ModelLoader::loadModel(const aiNode *node) {
 }
 
 Mesh *ModelLoader::loadMesh(const aiMesh *aiMesh) {
-    Mesh* mesh = new Mesh;
+    Mesh* mesh = new Mesh(TRIANGLE_MESH);
     mesh->setObjectName(aiMesh->mName.length ? aiMesh->mName.C_Str() : "Untitled");
+
+    AABB aabb;
+    aabb.min = QVector4D(aiMesh->mVertices[0].x, aiMesh->mVertices[0].y, aiMesh->mVertices[0].z, 1.0);
+    aabb.max = aabb.min;
 
     for(unsigned int i = 0; i < aiMesh->mNumVertices; i++)
     {
         Vertex vertex;
-        if(aiMesh->HasPositions())
+        if(aiMesh->HasPositions()) {
             vertex.position = QVector3D(aiMesh->mVertices[i].x, aiMesh->mVertices[i].y, aiMesh->mVertices[i].z);
+            if(vertex.position.x() < aabb.min.x())
+                aabb.min.setX(vertex.position.x());
+            if(vertex.position.y() < aabb.min.y())
+                aabb.min.setY(vertex.position.y());
+            if(vertex.position.z() < aabb.min.z())
+                aabb.min.setZ(vertex.position.z());
+            if(vertex.position.x() > aabb.max.x())
+                aabb.max.setX(vertex.position.x());
+            if(vertex.position.y() > aabb.max.y())
+                aabb.max.setY(vertex.position.y());
+            if(vertex.position.z() > aabb.max.z())
+                aabb.max.setZ(vertex.position.z());
+        }
         if(aiMesh->HasNormals())
             vertex.normal = QVector3D(aiMesh->mNormals[i].x, aiMesh->mNormals[i].y, aiMesh->mNormals[i].z);
         if(aiMesh->HasTextureCoords(0))
             vertex.texCoords = QVector2D(aiMesh->mTextureCoords[0][i].x, aiMesh->mTextureCoords[0][i].y);
+        if(aiMesh->HasTangentsAndBitangents()) {
+            vertex.tangent = QVector3D(aiMesh->mTangents[i].x, aiMesh->mTangents[i].y, aiMesh->mTangents[i].z);
+            vertex.bitangent = QVector3D(aiMesh->mBitangents[i].x, aiMesh->mBitangents[i].y, aiMesh->mBitangents[i].z);
+        }
         mesh->_vertices.push_back(vertex);
     }
+
+    mesh->_aabb = aabb;
 
     for(unsigned int i = 0; i < aiMesh->mNumFaces; i++)
     {
@@ -98,13 +126,25 @@ Material *ModelLoader::loadMaterial(const aiMaterial *aiMaterialPtr) {
         QString filePath = _dir.absolutePath() + '/' + QString(aiStr.C_Str()).replace('\\', '/');
         material->setMetallicRoughnessTexture(_textureLoader.loadFromFile(Texture::MetalRoughness, filePath));
     }
+    if (AI_SUCCESS == aiMaterialPtr->GetTexture(aiTextureType_NORMALS, 0, &aiStr)) {
+        QString filePath = _dir.absolutePath() + '/' + QString(aiStr.C_Str()).replace('\\', '/');
+        material->setNormalTexture(_textureLoader.loadFromFile(Texture::NORMALS, filePath));
+    }
+    if (AI_SUCCESS == aiMaterialPtr->GetTexture(aiTextureType_LIGHTMAP, 0, &aiStr)) {
+        QString filePath = _dir.absolutePath() + '/' + QString(aiStr.C_Str()).replace('\\', '/');
+        material->setAoTexture(_textureLoader.loadFromFile(Texture::AO, filePath));
+    }
+    if (AI_SUCCESS == aiMaterialPtr->GetTexture(aiTextureType_EMISSIVE, 0, &aiStr)) {
+        QString filePath = _dir.absolutePath() + '/' + QString(aiStr.C_Str()).replace('\\', '/');
+        material->setEmissiveTexture((_textureLoader.loadFromFile(Texture::EMISSIVE, filePath)));
+    }
 
     return material;
 }
 
 Mesh *ModelLoader::loadMeshFromFile(QString filePath) {
     Assimp::Importer import;
-    const aiScene *scene = import.ReadFile(filePath.toStdString(), aiProcess_Triangulate);
+    const aiScene *scene = import.ReadFile(filePath.toStdString(), aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs);
 
     if(!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
     {

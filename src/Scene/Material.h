@@ -18,16 +18,24 @@ public:
     float getMetallic() const;
     float getRoughness() const;
 
+    const QSharedPointer<Texture> &getNormalTexture() const;
+    const QSharedPointer<Texture> &getAoTexture() const;
+
+    const QSharedPointer<Texture> &getEmissiveTexture() const;
+
     void setColor(const QVector3D &color);
     void setMetallic(float metallic);
     void setRoughness(float roughness);
     void setColorTexture(const QSharedPointer<Texture> &colorTexture);
     void setMetallicRoughnessTexture(const QSharedPointer<Texture> &metallicRoughnessTexture);
+    void setNormalTexture(const QSharedPointer<Texture> &normalTexture);
+    void setAoTexture(const QSharedPointer<Texture> &aoTexture);
+    void setEmissiveTexture(const QSharedPointer<Texture> &emissiveTexture);
 
 protected:
     QVector3D _color;
     float _metallic, _roughness;
-    QSharedPointer<Texture> _colorTexture, _metallicRoughnessTexture;
+    QSharedPointer<Texture> _colorTexture, _metallicRoughnessTexture, _normalTexture, _aoTexture, _emissiveTexture;
 };
 
 

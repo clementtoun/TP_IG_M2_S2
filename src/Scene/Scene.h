@@ -29,6 +29,10 @@ public:
 
     const QVector<DirectionalLight *> &directionalLights() const;
 
+    const QVector<Model *> &models() const;
+
+    void updatePosition(float dt);
+
 signals:
     void modelAdded(Model* model);
     void lightAdded(AbstractLight* light);

@@ -22,7 +22,7 @@ void OpenGLEnvironment::create() {
     _vbo->bind();
     _vbo->allocate(_cubeMapVertices, sizeof(_cubeMapVertices));
 
-    glFuncs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
+    glFuncs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_4_5_Core>();
 
     glFuncs->glEnableVertexAttribArray(0);
     glFuncs->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -63,13 +63,17 @@ void OpenGLEnvironment::create() {
         glFuncs->glDrawArrays(GL_TRIANGLES, 0, 3);
     }
 
+    hdri.release();
+    hdri.destroy();
     glFuncs->glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glFuncs->glDeleteFramebuffers(1, &fbo);
 }
 
 bool OpenGLEnvironment::bind() {
-    glFuncs->glActiveTexture(GL_TEXTURE0);
-    glFuncs->glBindTexture(GL_TEXTURE_2D, _environmentTexture->textureId());
+    if (_vao == 0 || _vbo == 0) create();
+
+    glFuncs->glActiveTexture(GL_TEXTURE7);
+    _environmentTexture->bind();
 
     return true;
 }
@@ -85,7 +89,6 @@ void OpenGLEnvironment::render() {
 
     bind();
 
-    _environmentTexture->bind();
     _vao->bind();
     glFuncs->glDrawArrays(GL_TRIANGLES, 0, 36);
     _vao->release();

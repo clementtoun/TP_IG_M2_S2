@@ -13,6 +13,7 @@ OpenGLUniformBufferObject *OpenGLMesh::_modelInfo = 0;
 
 OpenGLMesh::OpenGLMesh(Mesh *mesh, QObject *parent) : QObject(nullptr) {
     _host = mesh;
+    _type = _host->getType();
     _vao = nullptr;
     _vbo = nullptr;
     _ebo = nullptr;
@@ -53,13 +54,17 @@ void OpenGLMesh::create() {
     if (_host->indices().size())
         _ebo->allocate(&_host->indices()[0], int(sizeof(uint32_t) * _host->indices().size()));
 
-    glFuncs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_3_3_Core>();
+    glFuncs = QOpenGLContext::currentContext()->versionFunctions<QOpenGLFunctions_4_5_Core>();
     glFuncs->glEnableVertexAttribArray(0);
     glFuncs->glEnableVertexAttribArray(1);
     glFuncs->glEnableVertexAttribArray(2);
+    glFuncs->glEnableVertexAttribArray(3);
+    glFuncs->glEnableVertexAttribArray(4);
     glFuncs->glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, position));
     glFuncs->glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, normal));
     glFuncs->glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, texCoords));
+    glFuncs->glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, tangent));
+    glFuncs->glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*) offsetof(Vertex, bitangent));
 }
 
 void OpenGLMesh::commit() {
@@ -89,8 +94,22 @@ void OpenGLMesh::render() {
         _openGLMaterial->bind();
 
     _vao->bind();
-    glFuncs->glDrawElements(GL_TRIANGLES, (GLsizei) _host->indices().size(), GL_UNSIGNED_INT, 0);
+    switch (_type) {
+        case TRIANGLE_MESH:
+        {
+            glFuncs->glDrawElements(GL_TRIANGLES, (GLsizei) _host->indices().size(), GL_UNSIGNED_INT,0);
+            break;
+        }
+        case LINE_MESH:
+        {
+            glFuncs->glDrawElements(GL_LINE, (GLsizei) _host->indices().size(), GL_UNSIGNED_INT,0);
+            break;
+        }
+    }
     _vao->release();
+
+    if (_openGLMaterial)
+        _openGLMaterial->release();
 }
 
 void OpenGLMesh::destroy() {

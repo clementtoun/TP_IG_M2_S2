@@ -49,8 +49,11 @@ Scene *OpenGLScene::host() const {
 }
 
 void OpenGLScene::renderModels() {
+    if(_environment.get())
+        _environment->bind();
     for (auto mesh: _normalMeshes) {
-        mesh->render();
+        if(mesh->host()->isVisible())
+            mesh->render();
     }
 }
 
@@ -80,8 +83,6 @@ void OpenGLScene::meshAdded(Mesh *mesh) {
 void OpenGLScene::lightAdded(AbstractLight *light) {
     if(light->getType() == POINT_LIGHT)
         _lightMeshes.push_back(new OpenGLMesh(light->getMesh(), this));
-    if(light->getType() == DIRECTIONAL_LIGHT)
-        std::cout << light->getType() << std::endl;
 }
 
 void OpenGLScene::environmentChanged(Environment *environment) {
@@ -146,5 +147,9 @@ OpenGLScene::~OpenGLScene() {
     for(auto m : _normalMeshes)
         delete m;
     _normalMeshes.clear();
+}
+
+bool OpenGLScene::hasEnvironment() {
+    return _environment.get() != nullptr;
 }
 

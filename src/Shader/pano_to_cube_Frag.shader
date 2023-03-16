@@ -1,4 +1,4 @@
-#version 330 core
+#version 450 core
 
 #define MATH_PI 3.1415926535897932384626433832795
 #define MATH_INV_PI (1.0 / MATH_PI)

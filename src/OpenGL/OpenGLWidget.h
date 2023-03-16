@@ -2,12 +2,12 @@
 #define TP_IG_M2_S2_OPENGLWIDGET_H
 
 #include <QOpenGLWidget>
-#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLFunctions_4_5_Core>
 #include "OpenGLScene.h"
 #include "OpenGLRenderer.h"
 
 
-class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core {
+class OpenGLWidget : public QOpenGLWidget, protected QOpenGLFunctions_4_5_Core {
     Q_OBJECT
 
 public:
@@ -15,6 +15,8 @@ public:
     OpenGLWidget(OpenGLScene* openGLScene, OpenGLRenderer* renderer);
 
     ~OpenGLWidget() override;
+
+    void toggleDrawFill();
 
 protected:
     void initializeGL() override;
@@ -28,6 +30,8 @@ protected:
 private:
     OpenGLScene* _scene;
     OpenGLRenderer* _renderer;
+
+    bool _drawFill;
 
     qint64 _last_time = 0;
 };

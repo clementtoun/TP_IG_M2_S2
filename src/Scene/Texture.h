@@ -11,6 +11,9 @@ public:
     enum TextureType {
         Albedo = 0,
         MetalRoughness = 1,
+        NORMALS = 2,
+        AO = 3,
+        EMISSIVE = 4,
     };
 
     explicit Texture(TextureType type);

@@ -16,8 +16,8 @@ enum Camera_Movement {
 
 constexpr float FOV      =  45.0f;
 constexpr float ASPECT     =  16.0f/9.0f;
-constexpr float NEAR      =  0.01f;
-constexpr float FAR     =  1000.0f;
+constexpr float NEAR      =  0.1f;
+constexpr float FAR     =  500.0f;
 
 /*------------------------------------------------------------------------------------------------------------------------*/
 /*                                                Abstract Camera                                                         */
@@ -32,14 +32,23 @@ public:
 
     virtual ~Camera();
 
+    virtual float getYaw() const = 0;
+    virtual float getPitch() const = 0;
+
     virtual // Returns the view matrix calculated using Eular Angles and the LookAt Matrix
     QMatrix4x4 viewmatrix() const;
     QMatrix4x4 projectionmatrix() const;
     float &zoom();
     QVector3D &position();
     QVector3D &front();
+
     void setposition(QVector3D position);
     void setAspect(float aspect);
+    float getAspect() const;
+
+    float getNear() const;
+
+    float getFar() const;
 
     void setviewport(QVector4D viewport);
 
@@ -109,6 +118,10 @@ public:
 
     void processmousescroll(float delta) override;
 
+    float getYaw() const;
+
+    float getPitch() const;
+
 private:
     // Calculates the front vector from the Camera's (updated) Eular Angles
     void updatecameravectors();
@@ -143,6 +156,10 @@ public:
     void processmousemovement(int button, float xpos, float ypos) override;
 
     void processmousescroll(float yoffset) override;
+
+    float getYaw() const;
+
+    float getPitch() const;
 
 private:
     // Calculates the front vector from the Camera's (updated) Eular Angles

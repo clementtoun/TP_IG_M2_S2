@@ -23,6 +23,8 @@ public:
     void commitCameraInfo();
     void commitLightInfo(AbstractLight *light);
 
+    bool hasEnvironment();
+
 private slots:
     void modelAdded(Model* model);
     void meshAdded(Mesh* mesh);

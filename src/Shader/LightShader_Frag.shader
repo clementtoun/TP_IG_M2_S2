@@ -1,4 +1,4 @@
-#version 330 core
+#version 450 core
 
 out vec4 FragColor;
 
@@ -17,5 +17,5 @@ layout (std140) uniform MaterialInfo {
 
 void main()
 {
-    FragColor = material.color;
+    FragColor = vec4(pow(vec3(material.color), vec3(2.2)), 1.0);
 }

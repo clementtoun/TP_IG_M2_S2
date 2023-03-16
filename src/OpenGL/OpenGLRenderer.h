@@ -18,27 +18,45 @@ public:
 
     void render(OpenGLScene* openGLScene);
 
+    void setShadowCascadeLevels(float cameraFarPlane);
+    QVector<QMatrix4x4> getLightSpaceMatrices(Camera& camera, const QVector3D& lightDir);
     void initialiseShadowFrameBuffer();
+    void initialiseHDR();
 
-    void setWidth(unsigned int width);
-    void setHeight(unsigned int height);
+    void setSize(unsigned int width, unsigned height);
 
     void setContext(QOpenGLContext *context);
+
+    bool isShadowActive() const;
+
+    void setShadowActive(bool shadowActive);
 
 private:
     QOpenGLContext* _context;
 
-    QOpenGLShaderProgram *_basicShader;
+    QOpenGLShaderProgram *_gltfShader;
     QOpenGLShaderProgram *_cubeMapShader;
     QOpenGLShaderProgram *_lightShader;
-    QOpenGLShaderProgram *_shadowMapShader;
+    QOpenGLShaderProgram *_CSMShader;
     QOpenGLShaderProgram *_shadowCubeShader;
+    QOpenGLShaderProgram *_hdrShader;
     unsigned int _depthMapFBO;
-    unsigned int _depthMap;
+    unsigned int _depthCSMap;
     unsigned int _depthCubeMap;
-    QOpenGLFunctions_3_3_Core *glFuncs;
-    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+
+    QVector<float> _shadowCascadeLevels;
+
+    unsigned int _colorBuffer;
+    unsigned int _hdrFBO;
+    unsigned int _rboDepth;
+    unsigned int _quadVAO = 0;
+    unsigned int _quadVBO = 0;
+
+    QOpenGLFunctions_4_5_Core *glFuncs;
+    const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
     unsigned int _width, _height;
+
+    bool _shadowActive;
 };
 
 

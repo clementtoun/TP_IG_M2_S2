@@ -1,7 +1,5 @@
-#version 330 core
+#version 450 core
 layout (location = 0) in vec3 aPos;
-
-uniform mat4 lightSpaceMatrix;
 
 layout (std140) uniform ModelInfo { // uniform size: 64
     //                    // base align  // aligned offset
@@ -11,5 +9,5 @@ layout (std140) uniform ModelInfo { // uniform size: 64
 
 void main()
 {
-    gl_Position = lightSpaceMatrix * modelMat * vec4(aPos, 1.0);
+    gl_Position = modelMat * vec4(aPos, 1.0);
 }
